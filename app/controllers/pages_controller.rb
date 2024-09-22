@@ -9,12 +9,27 @@ class PagesController < ApplicationController
       response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{zone["id"]}/state", headers: { "Authorization" => "Bearer #{token_response["access_token"]}" })
       JSON.parse(response.body)
     end
-    @zone_history = @zones[0..0].map do |zone|
-      response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{zone["id"]}/dayReport?date=#{(Date.today - 2.week)}",
-                              headers: { "Authorization" => "Bearer #{token_response["access_token"]}" }) 
-      JSON.parse(response.body)
+
+    @zone_history = @zones.map do |zone|
+      date_zone_created = zone["dateCreated"].to_date
+      today = Date.today
+      zone_today = ZoneReport.where(zone_id: zone["id"], requested_date: today).first
+      if zone_today.present?
+        zone_today.requested_date
+      else
+        latest_existing = ZoneReport.where(zone_id: zone["id"]).order(requested_date: :desc).limit(1).first
+        starting_date = latest_existing ? latest_existing.requested_date + 1.day : date_zone_created
+        end_date = [ starting_date + 10.weeks, today ].min
+        (starting_date..end_date).map do |date|
+          report = fetch_zone_day_report(token_response["access_token"], zone["id"], date)
+          p report
+          new_report = ZoneReport.create(zone_id: zone["id"], requested_date: date, interval_from: report["interval"]["from"], interval_to: report["interval"]["to"], data: report)
+          p "Fetched report for #{zone["name"]} on #{date}"
+          sleep(1)
+          new_report.requested_date
+        end
+      end
     end
-    @history_url = "https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{@zones[0]["id"]}/dayReport?date=#{(Date.today - 2.week)}"
   end
 
   private
@@ -39,6 +54,13 @@ class PagesController < ApplicationController
 
   def fetch_zones(token)
     response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones", headers: { "Authorization" => "Bearer #{token}" })
+    JSON.parse(response.body)
+  end
+
+  def fetch_zone_day_report(token, zone_id, date)
+    url = "https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{zone_id}/dayReport?date=#{date}"
+    response = HTTParty.get(url,
+                            headers: { "Authorization" => "Bearer #{token}" })
     JSON.parse(response.body)
   end
 end

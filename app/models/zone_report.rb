@@ -1,0 +1,2 @@
+class ZoneReport < ApplicationRecord
+end
