@@ -1,7 +1,9 @@
 <h1>Hello!</h1>
-<p>your data:</p>
+<p>your home:</p>
 <code>
-
-    <%= @homes_data %>
-
+    <%= @home_data %>
 </code>
+
+<p>your zones:</p>
+<%= @zones_data.map { |zone| "<code style=\"display: block; margin-bottom: 12px;\">#{h(zone)}</code>".html_safe }.join.html_safe %>
+

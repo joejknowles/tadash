@@ -3,7 +3,8 @@ require "httparty"
 class PagesController < ApplicationController
   def index
     token_response = fetch_token
-    @homes_data = fetch_homes(token_response["access_token"]) if token_response["access_token"]
+    @home_data = fetch_home(token_response["access_token"]) if token_response["access_token"]
+    @zones_data = fetch_zones(token_response["access_token"]) if token_response["access_token"]
   end
 
   private
@@ -21,8 +22,13 @@ class PagesController < ApplicationController
     JSON.parse(response.body)
   end
 
-  def fetch_homes(token)
+  def fetch_home(token)
     response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}", headers: { "Authorization" => "Bearer #{token}" })
+    JSON.parse(response.body)
+  end
+
+  def fetch_zones(token)
+    response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones", headers: { "Authorization" => "Bearer #{token}" })
     JSON.parse(response.body)
   end
 end
