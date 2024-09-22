@@ -1,0 +1,52 @@
+/*
+	Original file copyright 2009-2015, Jan-Philip Gehrcke (http://gehrcke.de)
+	Changes 🄯 2024, Terence Eden (https://shkspr.mobi/blog)
+
+	To create your own style:
+	* Copy this file (wp-geshi-highlight.css)
+	* Make changes to it
+	* Save it in your theme's root directory
+
+	The plugin defaults to your modified file.
+	
+	This CSS attempts to create a basic yet accessible style for highlighted code.
+*/
+
+.wp-geshi-highlight {
+	padding: 0;
+	background: #d3d3d3;
+}
+
+.wp-geshi-highlight code {
+	color: #444;
+	margin: 0;
+	padding: 1em;
+	background-color: #fff;
+	line-height: 1.25em;
+	word-wrap: normal;
+	white-space: nowrap;
+	font-weight: bold;
+	border-radius: 0;
+	display: inline-block;
+	filter: invert( var(--filter-invert) );
+}
+
+.wp-geshi-language {
+	display: block;
+	color: black;
+	font-weight: bold;
+	border-radius: 0;
+	padding: 0 1em 0 0;
+	user-select: none;
+	pointer-events: none;
+}
+
+.wp-geshi-language-icon {
+	display: inline;
+	vertical-align: middle;
+	width: 2.5em;
+}
+
+.wp-geshi-language img {
+	border-radius: 0;
+}
