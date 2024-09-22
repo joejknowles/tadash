@@ -5,11 +5,16 @@ class PagesController < ApplicationController
     token_response = fetch_token
     @home = fetch_home(token_response["access_token"]) if token_response["access_token"]
     @zones = fetch_zones(token_response["access_token"]) if token_response["access_token"]
-
     @zone_states = @zones.map do |zone|
       response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{zone["id"]}/state", headers: { "Authorization" => "Bearer #{token_response["access_token"]}" })
       JSON.parse(response.body)
     end
+    @zone_history = @zones[0..0].map do |zone|
+      response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{zone["id"]}/dayReport?date=#{(Date.today - 2.week)}",
+                              headers: { "Authorization" => "Bearer #{token_response["access_token"]}" }) 
+      JSON.parse(response.body)
+    end
+    @history_url = "https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{@zones[0]["id"]}/dayReport?date=#{(Date.today - 2.week)}"
   end
 
   private
