@@ -1,25 +1,3 @@
 <h1>Hello!</h1>
 
-<h2>your home:</h2>
-<code>
-    <%= JSON.pretty_generate(@home) %>
-</code>
-
-<h2>your zones:</h2>
-<%= @zones&.map do |zone|
-        "<pre style=\"display: block; margin-bottom: 12px; \">#{h(JSON.pretty_generate(zone))}</pre>".html_safe
-    end&.join&.html_safe
-%>
-
-<h2>zone states:</h2>
-<%= @zone_states&.map do |zone_state|
-        "<pre style=\"display: block; margin-bottom: 12px;\">#{h(JSON.pretty_generate(zone_state))}</pre>".html_safe
-    end&.join&.html_safe
-%>
-
-<h2>zone history:</h2>
-<%= @zone_history&.map do |zone_history|
-        "<pre style=\"display: block; margin-bottom: 12px;\">#{h(JSON.pretty_generate(zone_history))}</pre>".html_safe
-    end&.join&.html_safe
-%>
-<%= @history_url %>
+Hi
