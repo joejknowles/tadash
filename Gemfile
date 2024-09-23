@@ -52,3 +52,5 @@ group :development do
   gem "web-console"
 end
 gem "solargraph", group: :development
+
+gem "chartkick"

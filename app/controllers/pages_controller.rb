@@ -23,6 +23,20 @@ class PagesController < ApplicationController
         end
       end
     end
+
+    @temperature_data =  @zones.map do |zone|
+      {
+        name: zone["name"],
+        data: ZoneReport.where(zone_id: zone["id"]).map { |report| [ report.requested_date, report.avg_temp ] }
+      }
+    end
+
+    @humidity_data =  @zones.map do |zone|
+      {
+        name: zone["name"],
+        data: ZoneReport.where(zone_id: zone["id"]).map { |report| [ report.requested_date, report.avg_humidity ] }
+      }
+    end
   end
 
   def current_states
