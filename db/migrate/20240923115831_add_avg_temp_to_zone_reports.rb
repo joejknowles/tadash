@@ -4,6 +4,8 @@ class AddAvgTempToZoneReports < ActiveRecord::Migration[7.2]
     add_column :zone_reports, :avg_humidity, :decimal
 
     ZoneReport.all.each do |report|
+      return unless report.avg_temp.nil? || report.avg_humidity.nil?
+
       if report.data["measuredData"]["insideTemperature"]["dataPoints"].any?
         average_temperature = report.data["measuredData"]["insideTemperature"]["dataPoints"].inject(0) do |sum, datapoint|
           sum + datapoint["value"]["celsius"]
