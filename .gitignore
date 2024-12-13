@@ -35,3 +35,5 @@
 /config/master.key
 
 /local_ignore/*
+
+db/seeds/local
