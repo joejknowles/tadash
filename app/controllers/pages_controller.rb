@@ -27,16 +27,30 @@ class PagesController < ApplicationController
     @temperature_data =  @zones.map do |zone|
       {
         name: zone["name"],
-        data: ZoneReport.where(zone_id: zone["id"]).map { |report| [ report.requested_date, report.avg_temp ] }
+        data: ZoneReport.where(zone_id: zone["id"]).last(14).map { |report| [ report.requested_date, report.avg_temp ] }
       }
     end
+
+    @min_temp = @temperature_data.map do |zone|
+      zone[:data].map { |data| data[1] }.min
+    end.min
+    @max_temp = @temperature_data.map do |zone|
+      zone[:data].map { |data| data[1] }.max
+    end.max
 
     @humidity_data =  @zones.map do |zone|
       {
         name: zone["name"],
-        data: ZoneReport.where(zone_id: zone["id"]).map { |report| [ report.requested_date, report.avg_humidity ] }
+        data: ZoneReport.where(zone_id: zone["id"]).last(14).map { |report| [ report.requested_date, report.avg_humidity * 100 ] }
       }
     end
+
+    @min_humidity = @humidity_data.map do |zone|
+      zone[:data].map { |data| data[1] }.min
+    end.min
+    @max_humidity = @humidity_data.map do |zone|
+      zone[:data].map { |data| data[1] }.max
+    end.max
   end
 
   def current_states
