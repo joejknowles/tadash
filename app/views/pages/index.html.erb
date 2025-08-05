@@ -1,5 +1,14 @@
-<h1>Hello!</h1>
 
-<%= line_chart @temperature_data, library: { scales: { y: { min: @min_temp.floor, max: @max_temp.ceil } } } %>
+<% if @error %>
+    <p>
+        <%= @error %>
+    </p>
+<% else %>
 
-<%= line_chart @humidity_data, library: { scales: { y: { min: @min_humidity.floor, max: @max_humidity.ceil } } } %>
+    <h2 style="text-align: center;">Temperature</h2>
+    <%= line_chart @temperature_data, library: { scales: { y: { min: @min_temp.floor, max: @max_temp.ceil } } } %>
+
+    <h2 style="text-align: center;">Humidity</h2>
+    <%= line_chart @humidity_data, library: { scales: { y: { min: @min_humidity.floor, max: @max_humidity.ceil } } } %>
+
+<% end %>
