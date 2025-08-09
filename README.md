@@ -13,6 +13,8 @@ https://github.com/home-assistant/core/issues/138518
 
 Need to migrate to device token flow
 
+https://support.tado.com/en/articles/8565472-how-do-i-authenticate-to-access-the-rest-api
+
 To get local device IP:
 `ipconfig getifaddr en0`
 

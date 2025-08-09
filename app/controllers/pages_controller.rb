@@ -3,25 +3,39 @@ require "httparty"
 class PagesController < ApplicationController
   def index
     # Aug 14th 2023 earliest? 722 on aug 5th 2025
-    days_to_show = 14
+    days_to_show = 10
 
-    p " starting"
-    # token_response = fetch_token
-    token = ""
-    p "got token"
-    @zones = fetch_zones(token) if token
+    token = session[:tado_token]
+
+    if token.nil?
+      @error = "auth/no_token"
+      p "No token found in session"
+      return redirect_to login_path
+    elsif session[:tado_token_expires_at].nil? || session[:tado_token_expires_at] < Time.current
+      p "Token expired, fetching new token"
+      token = fetch_refresh_token
+      if token.nil?
+        @error = "auth/expired_token"
+        return redirect_to login_path
+      end
+    else
+      p "Using existing token"
+    end
+
+    @zones = fetch_zones(token)
     # check if zones is correct type and has error key first:
     if @zones.is_a?(Hash) && @zones["errors"].present?
       p "Error fetching zones: #{@zones["errors"]}"
-      return @error = "Error fetching zones"
+      session[:tado_token] = nil
+      @error = "auth/expired_token"
+      return redirect_to login_path
     end
     @zones.each do |zone|
-      p zone
       date_zone_created = zone["dateCreated"].to_date
       today = Date.today
       zone_today = ZoneReport.where(zone_id: zone["id"], requested_date: today).first
-      if zone_today.present? && zone_today.is_full_day
-        return
+      if zone_today.present? && (zone_today.is_full_day || zone_today.updated_at > 10.minutes.ago)
+        next
       else
         latest_full_day = ZoneReport.where(zone_id: zone["id"], is_full_day: true).order(requested_date: :desc).limit(1).first
         starting_date = latest_full_day ? latest_full_day.requested_date + 1.day : date_zone_created
@@ -39,7 +53,7 @@ class PagesController < ApplicationController
           zone_report.is_full_day = date != today
           zone_report.save
           p "Fetched report for #{zone["name"]} on #{date}"
-          sleep(0.5)
+          sleep(0.5) if starting_date != end_date
         end
       end
     end
@@ -71,6 +85,8 @@ class PagesController < ApplicationController
     @max_humidity = @humidity_data.map do |zone|
       zone[:data].map { |data| data[1] || 0 }.max || 0
     end.max
+
+    p "Finished fetching data"
   end
 
   def current_states
@@ -85,17 +101,20 @@ class PagesController < ApplicationController
 
   private
 
-  def fetch_token
-    response = HTTParty.post("https://auth.tado.com/oauth/token", body: {
-      client_id: "tado-web-app",
-      grant_type: "password",
-      scope: "home.user",
-      username: ENV["TADASH_MY_USERNAME"],
-      password: ENV["TADASH_MY_PASSWORD"],
-      client_secret: ENV["TADASH_TADO_CLIENT_SECRET"]
+
+  def fetch_refresh_token
+    response = HTTParty.post("https://login.tado.com/oauth2/token", body: {
+        client_id: "1bb50063-6b0c-4d11-bd99-387f4a91cc46",
+        refresh_token: session[:refresh_token],
+        grant_type: "refresh_token"
     })
 
-    JSON.parse(response.body)
+    token_response = JSON.parse(response.body)
+    session[:tado_token] = token_response["access_token"]
+    session[:refresh_token] = token_response["refresh_token"]
+    session[:tado_token_expires_at] = token_response["expires_in"].seconds.from_now - 1.minute
+
+    token_response["access_token"]
   end
 
   def fetch_home(token)

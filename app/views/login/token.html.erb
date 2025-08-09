@@ -1,0 +1,16 @@
+<% if flash[:notice] %>
+    <p>
+        <%= flash[:notice] %>
+    </p>
+<% end %>
+
+<a href="<%= request.fullpath %>" onClick="event.preventDefault(); location.reload();">Refresh</a>
+
+
+<p>
+    Or try <a href="/login" class="btn btn-primary">logging in</a> again.
+</p>
+
+<script>
+    setTimeout(() => location.reload(), 2000);
+</script>

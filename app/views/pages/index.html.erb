@@ -1,7 +1,17 @@
 
-<% if @error %>
+<% if flash[:notice] %>
     <p>
-        <%= @error %>
+        <%= flash[:notice] %>
+    </p>
+<% end %>
+
+<% if @error == "auth/no_token" %>
+    <p>
+        <a href="/login" class="btn btn-primary">log in</a>
+    </p>
+<% elsif @error == "auth/expired_token" %>
+    <p>
+        Your session has expired. Please <a href="/login" class="btn btn-primary">log in</a> again.
     </p>
 <% else %>
 
