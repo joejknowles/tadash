@@ -7,7 +7,7 @@ class PagesController < ApplicationController
 
     token = session[:tado_token]
 
-    if token.nil?
+    if token.nil? || session[:tado_token_expires_at].nil? || session[:user_id].nil?
       @error = "auth/no_token"
       p "No token found in session"
       return redirect_to login_path
@@ -33,11 +33,15 @@ class PagesController < ApplicationController
     @zones.each do |zone|
       date_zone_created = zone["dateCreated"].to_date
       today = Date.today
-      zone_today = ZoneReport.where(zone_id: zone["id"], requested_date: today).first
+      zone_today = ZoneReport.where(user_id: session[:user_id], zone_id: zone["id"], requested_date: today).first
       if zone_today.present? && (zone_today.is_full_day || zone_today.updated_at > 10.minutes.ago)
         next
       else
-        latest_full_day = ZoneReport.where(zone_id: zone["id"], is_full_day: true).order(requested_date: :desc).limit(1).first
+        latest_full_day = ZoneReport.where(
+          user_id: session[:user_id],
+          zone_id: zone["id"],
+          is_full_day: true
+        ).order(requested_date: :desc).limit(1).first
         starting_date = latest_full_day ? latest_full_day.requested_date + 1.day : date_zone_created
         end_date = [ starting_date + 10.weeks, today ].min
         (starting_date..end_date).each do |date|
@@ -46,12 +50,13 @@ class PagesController < ApplicationController
             p "Error fetching zone report: #{@zones["errors"]}"
             return @error = "Error fetching zone day report"
           end
-          zone_report = ZoneReport.find_or_initialize_by(zone_id: zone["id"], requested_date: date)
+          zone_report = ZoneReport.find_or_initialize_by(zone_id: zone["id"], requested_date: date, user_id: session[:user_id])
           zone_report.interval_from = report["interval"]["from"]
           zone_report.interval_to = report["interval"]["to"]
           zone_report.data = report
           zone_report.is_full_day = date != today
-          zone_report.save
+          zone_report.user_id = session[:user_id]
+          zone_report.save!
           p "Fetched report for #{zone["name"]} on #{date}"
           sleep(0.5) if starting_date != end_date
         end
@@ -61,7 +66,7 @@ class PagesController < ApplicationController
     @temperature_data =  @zones.map do |zone|
       {
         name: zone["name"],
-        data: ZoneReport.where(zone_id: zone["id"]).last(days_to_show).map { |report| [ report.requested_date, report.avg_temp ] }
+        data: ZoneReport.where(zone_id: zone["id"], user_id: session[:user_id]).last(@days_to_show).map { |report| [ report.requested_date, report.avg_temp ] }
       }
     end
 
@@ -75,7 +80,7 @@ class PagesController < ApplicationController
     @humidity_data =  @zones.map do |zone|
       {
         name: zone["name"],
-        data: ZoneReport.where(zone_id: zone["id"]).last(days_to_show).map { |report| [ report.requested_date, report.avg_humidity.nil? ? nil : report.avg_humidity * 100 ] }
+        data: ZoneReport.where(zone_id: zone["id"], user_id: session[:user_id]).last(@days_to_show).map { |report| [ report.requested_date, report.avg_humidity.nil? ? nil : report.avg_humidity * 100 ] }
       }
     end
 
@@ -110,9 +115,13 @@ class PagesController < ApplicationController
     })
 
     token_response = JSON.parse(response.body)
+
+    return p token_response["error_description"] if token_response["error_description"]
+
     session[:tado_token] = token_response["access_token"]
     session[:refresh_token] = token_response["refresh_token"]
     session[:tado_token_expires_at] = token_response["expires_in"].seconds.from_now - 1.minute
+    session[:user_id] = token_response["userId"]
 
     token_response["access_token"]
   end

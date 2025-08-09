@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_08_134611) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_09_132057) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -34,6 +34,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_08_134611) do
     t.decimal "avg_temp"
     t.decimal "avg_humidity"
     t.boolean "is_full_day", default: true
-    t.index ["zone_id", "requested_date"], name: "index_zone_reports_on_zone_id_and_requested_date", unique: true
+    t.string "user_id", null: false
+    t.index ["user_id", "zone_id", "requested_date"], name: "index_zone_reports_on_user_id_zone_id_requested_date", unique: true
   end
 end

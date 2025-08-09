@@ -19,6 +19,7 @@ class LoginController < ApplicationController
       session[:tado_token] = token_response["access_token"]
       session[:tado_token_expires_at] = token_response["expires_in"].seconds.from_now - 1.minute
       session[:refresh_token] = token_response["refresh_token"]
+      session[:user_id] = token_response["userId"]
       flash[:notice] = nil
       redirect_to root_path
     end
