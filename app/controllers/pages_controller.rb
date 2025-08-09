@@ -1,9 +1,11 @@
 require "httparty"
 
 class PagesController < ApplicationController
+  DEFAULT_DAYS_TO_SHOW = 14
+
   def index
     # Aug 14th 2023 earliest? 722 on aug 5th 2025
-    @days_to_show = params[:days_to_show].to_i > 0 ? params[:days_to_show].to_i : 30
+    @days_to_show = params[:days_to_show].to_i > 0 ? params[:days_to_show].to_i : DEFAULT_DAYS_TO_SHOW
 
     token = session[:tado_token]
 
