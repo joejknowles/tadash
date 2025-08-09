@@ -3,7 +3,7 @@ require "httparty"
 class PagesController < ApplicationController
   def index
     # Aug 14th 2023 earliest? 722 on aug 5th 2025
-    days_to_show = 10
+    @days_to_show = params[:days_to_show].to_i > 0 ? params[:days_to_show].to_i : 30
 
     token = session[:tado_token]
 

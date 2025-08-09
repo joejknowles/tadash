@@ -21,4 +21,15 @@
     <h2 style="text-align: center;">Humidity</h2>
     <%= line_chart @humidity_data, library: { scales: { y: { min: @min_humidity.floor, max: @max_humidity.ceil } } } %>
 
+    <p>
+        Days: <input type="number" name="days_to_show" id="days_to_show" value="<%= @days_to_show %>" min="1" max="1500" style="width: 50px;" />
+        <button 
+            id="updateData"
+            class="btn btn-primary" 
+            data-action="update"
+            onclick="window.location.href='?days_to_show=' + document.getElementById('days_to_show').value"
+        >
+            Update
+        </button>
+    </p>
 <% end %>
