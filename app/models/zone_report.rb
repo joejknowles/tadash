@@ -19,4 +19,18 @@ class ZoneReport < ApplicationRecord
       avg_humidity: average_humidity
     )
   end
+
+  def pretty_print(pp)
+    # Get attributes without the unwanted one
+    filtered_attrs = attributes.except("data")
+
+    # Let pretty-print output them in the normal Rails/IRB colorized format
+    pp.object_group(self) do
+      filtered_attrs.each do |key, value|
+        pp.breakable
+        pp.text "#{key}: "
+        pp.pp value
+      end
+    end
+  end
 end
