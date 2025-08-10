@@ -101,7 +101,7 @@ class PagesController < ApplicationController
     @home = fetch_home(token_response["access_token"]) if token_response["access_token"]
     @zones = fetch_zones(token_response["access_token"]) if token_response["access_token"]
     @zone_states = @zones.map do |zone|
-      response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{zone["id"]}/state", headers: { "Authorization" => "Bearer #{token_response["access_token"]}" })
+      response = HTTParty.get("https://my.tado.com/api/v2/homes/#{session[:tado_home_id]}/zones/#{zone["id"]}/state", headers: { "Authorization" => "Bearer #{token_response["access_token"]}" })
       JSON.parse(response.body)
     end
   end
@@ -125,16 +125,19 @@ class PagesController < ApplicationController
     session[:tado_token_expires_at] = token_response["expires_in"].seconds.from_now - 1.minute
     session[:user_id] = token_response["userId"]
 
+    home_response = fetch_home(token_response["access_token"])
+      session[:tado_home_id] = home_response["homes"][0]["id"]
+
     token_response["access_token"]
   end
 
   def fetch_home(token)
-    response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}", headers: { "Authorization" => "Bearer #{token}" })
+    response = HTTParty.get("https://my.tado.com/api/v2/homes/#{session[:tado_home_id]}", headers: { "Authorization" => "Bearer #{token}" })
     JSON.parse(response.body)
   end
 
   def fetch_zones(token)
-    response = HTTParty.get("https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones", headers: {
+    response = HTTParty.get("https://my.tado.com/api/v2/homes/#{session[:tado_home_id]}/zones", headers: {
       "Authorization" => "Bearer #{token}",
       "Content-Type" => "application/json",
       "Accept" => "application/json",
@@ -145,9 +148,14 @@ class PagesController < ApplicationController
   end
 
   def fetch_zone_day_report(token, zone_id, date)
-    url = "https://my.tado.com/api/v2/homes/#{ENV["TADASH_MY_HOME_ID"]}/zones/#{zone_id}/dayReport?date=#{date}"
+    url = "https://my.tado.com/api/v2/homes/#{session[:tado_home_id]}/zones/#{zone_id}/dayReport?date=#{date}"
     response = HTTParty.get(url,
                             headers: { "Authorization" => "Bearer #{token}" })
+    JSON.parse(response.body)
+  end
+
+  def fetch_home(token)
+    response = HTTParty.get("https://my.tado.com/api/v2/me", headers: { "Authorization" => "Bearer #{token}" })
     JSON.parse(response.body)
   end
 end

@@ -20,6 +20,10 @@ class LoginController < ApplicationController
       session[:tado_token_expires_at] = token_response["expires_in"].seconds.from_now - 1.minute
       session[:refresh_token] = token_response["refresh_token"]
       session[:user_id] = token_response["userId"]
+
+      home_response = fetch_home(token_response["access_token"])
+      session[:tado_home_id] = home_response["homes"][0]["id"]
+
       flash[:notice] = nil
       redirect_to root_path
     end
@@ -42,6 +46,11 @@ class LoginController < ApplicationController
         grant_type: "urn:ietf:params:oauth:grant-type:device_code"
     })
 
+    JSON.parse(response.body)
+  end
+
+  def fetch_home(token)
+    response = HTTParty.get("https://my.tado.com/api/v2/me", headers: { "Authorization" => "Bearer #{token}" })
     JSON.parse(response.body)
   end
 end
