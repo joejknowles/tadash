@@ -1,5 +1,6 @@
 class ZoneReport < ApplicationRecord
   after_create :add_averages
+  after_update :add_averages
 
   def add_averages
     if data["measuredData"]["insideTemperature"]["dataPoints"].any?
@@ -14,7 +15,7 @@ class ZoneReport < ApplicationRecord
       end / data["measuredData"]["humidity"]["dataPoints"].length
     end
 
-    self.update(
+    self.update_columns(
       avg_temp: average_temperature,
       avg_humidity: average_humidity
     )
