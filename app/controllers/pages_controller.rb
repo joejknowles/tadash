@@ -68,7 +68,11 @@ class PagesController < ApplicationController
     @temperature_data =  @zones.map do |zone|
       {
         name: zone["name"],
-        data: ZoneReport.where(zone_id: zone["id"], user_id: session[:user_id]).last(@days_to_show).map { |report| [ report.requested_date, report.avg_temp ] }
+        data: ZoneReport.where(
+          zone_id: zone["id"],
+          user_id: session[:user_id],
+          requested_date: (Date.today - @days_to_show.days)..Date.today
+        ).map { |report| [ report.requested_date, report.avg_temp ] }
       }
     end
 
@@ -82,7 +86,11 @@ class PagesController < ApplicationController
     @humidity_data =  @zones.map do |zone|
       {
         name: zone["name"],
-        data: ZoneReport.where(zone_id: zone["id"], user_id: session[:user_id]).last(@days_to_show).map { |report| [ report.requested_date, report.avg_humidity.nil? ? nil : report.avg_humidity * 100 ] }
+        data: ZoneReport.where(
+          zone_id: zone["id"],
+          user_id: session[:user_id],
+          requested_date: (Date.today - @days_to_show.days)..Date.today
+        ).map { |report| [ report.requested_date, report.avg_humidity.nil? ? nil : report.avg_humidity * 100 ] }
       }
     end
 
