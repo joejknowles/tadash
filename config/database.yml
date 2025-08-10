@@ -80,6 +80,7 @@ test:
 #
 production:
   <<: *default
-  database: tadash_production
-  username: tadash
-  password: <%= ENV["TADASH_DATABASE_PASSWORD"] %>
+  url: <%= ENV["TADASH_DATABASE_URL"] %>
+  # database: tadash_production
+  # username: tadash
+  # password: <%= ENV["TADASH_DATABASE_PASSWORD"] %>
