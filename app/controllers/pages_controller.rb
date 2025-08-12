@@ -65,41 +65,30 @@ class PagesController < ApplicationController
       end
     end
 
-    @temperature_data =  @zones.map do |zone|
-      {
-        name: zone["name"],
-        data: ZoneReport.where(
-          zone_id: zone["id"],
-          user_id: session[:user_id],
-          requested_date: (Date.today - @days_to_show.days)..Date.today
-        ).map { |report| [ report.requested_date, report.avg_temp ] }
-      }
-    end
+    range    = (Date.today - @days_to_show.days)..Date.today
+    zone_ids = @zones.map { |z| z["id"] }
 
-    @min_temp = @temperature_data.map do |zone|
-      zone[:data].map { |data| data[1] || Float::INFINITY }.min || Float::INFINITY
-    end.min
-    @max_temp = @temperature_data.map do |zone|
-      zone[:data].map { |data| data[1] || 0 }.max || 0
-    end.max
+    rows = ZoneReport.where(zone_id: zone_ids, user_id: session[:user_id], requested_date: range)
+                    .pluck(:zone_id, :requested_date, :avg_temp, :avg_humidity)
 
-    @humidity_data =  @zones.map do |zone|
-      {
-        name: zone["name"],
-        data: ZoneReport.where(
-          zone_id: zone["id"],
-          user_id: session[:user_id],
-          requested_date: (Date.today - @days_to_show.days)..Date.today
-        ).map { |report| [ report.requested_date, report.avg_humidity.nil? ? nil : report.avg_humidity * 100 ] }
-      }
-    end
+    by_zone = rows.group_by { |zid, *_| zid }
 
-    @min_humidity = @humidity_data.map do |zone|
-      zone[:data].map { |data| data[1] || Float::INFINITY }.min || Float::INFINITY
-    end.min
-    @max_humidity = @humidity_data.map do |zone|
-      zone[:data].map { |data| data[1] || 0 }.max || 0
-    end.max
+    @temperature_data = @zones.map { |z|
+      data = (by_zone[z["id"]] || []).map { |(_, d, t, _)| [ d, t ] }
+      { name: z["name"], data: data }
+    }
+
+    @humidity_data = @zones.map { |z|
+      data = (by_zone[z["id"]] || []).map { |(_, d, _, h)| [ d, h&.*(100) ] }
+      { name: z["name"], data: data }
+    }
+
+    temps = rows.map { |_, _, t, _| t }.compact
+    hums  = rows.map { |_, _, _, h| h&.*(100) }.compact
+    @min_temp = temps.min ||  Float::INFINITY
+    @max_temp = temps.max || 0
+    @min_humidity = hums.min || Float::INFINITY
+    @max_humidity = hums.max || 0
 
     p "Finished fetching data"
   end
